@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Config;
 use Laratusk\LaravelMailgunMulti\Exceptions\InvalidMailgunConfigException;
 use Laratusk\LaravelMailgunMulti\Resolvers\ConfigBasedMailgunSenderPropertiesResolver;
 
-beforeEach(function () {
+beforeEach(function (): void {
     Config::set('services.mailgun', [
         'domain' => 'mg.default.com',
         'secret' => 'default-secret',
@@ -24,7 +24,7 @@ beforeEach(function () {
     ]);
 });
 
-test('it resolves fully configured domain', function () {
+test('it resolves fully configured domain', function (): void {
     $resolver = new ConfigBasedMailgunSenderPropertiesResolver;
     $properties = $resolver->resolve('custom.com');
 
@@ -33,7 +33,7 @@ test('it resolves fully configured domain', function () {
         ->and($properties->endpoint)->toBe('api.eu.mailgun.net');
 });
 
-test('it falls back to global config for partial domain config', function () {
+test('it falls back to global config for partial domain config', function (): void {
     $resolver = new ConfigBasedMailgunSenderPropertiesResolver;
     $properties = $resolver->resolve('partial.com');
 
@@ -42,7 +42,7 @@ test('it falls back to global config for partial domain config', function () {
         ->and($properties->endpoint)->toBe('api.mailgun.net');
 });
 
-test('it builds default domain for unconfigured domains', function () {
+test('it builds default domain for unconfigured domains', function (): void {
     $resolver = new ConfigBasedMailgunSenderPropertiesResolver;
     $properties = $resolver->resolve('unknown.com');
 
@@ -51,21 +51,21 @@ test('it builds default domain for unconfigured domains', function () {
         ->and($properties->endpoint)->toBe('api.mailgun.net');
 });
 
-test('it throws exception when secret is missing', function () {
-    Config::set('services.mailgun.secret', null);
+test('it throws exception when secret is missing', function (): void {
+    Config::set('services.mailgun.secret');
 
     $resolver = new ConfigBasedMailgunSenderPropertiesResolver;
     $resolver->resolve('unknown.com');
 })->throws(InvalidMailgunConfigException::class, 'secret is not configured');
 
-test('it throws exception when secret is empty string', function () {
+test('it throws exception when secret is empty string', function (): void {
     Config::set('services.mailgun.secret', '');
 
     $resolver = new ConfigBasedMailgunSenderPropertiesResolver;
     $resolver->resolve('unknown.com');
 })->throws(InvalidMailgunConfigException::class, 'secret is not configured');
 
-test('it uses domain-specific secret over global secret', function () {
+test('it uses domain-specific secret over global secret', function (): void {
     $resolver = new ConfigBasedMailgunSenderPropertiesResolver;
     $properties = $resolver->resolve('custom.com');
 

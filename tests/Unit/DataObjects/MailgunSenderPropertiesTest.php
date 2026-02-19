@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Laratusk\LaravelMailgunMulti\DataObjects\MailgunSenderProperties;
 
-test('it creates sender properties with all values', function () {
+test('it creates sender properties with all values', function (): void {
     $properties = new MailgunSenderProperties(
         domain: 'mg.example.com',
         secret: 'my-secret',
@@ -16,7 +16,7 @@ test('it creates sender properties with all values', function () {
         ->and($properties->endpoint)->toBe('api.mailgun.net');
 });
 
-test('it is immutable', function () {
+test('it is immutable', function (): void {
     $properties = new MailgunSenderProperties(
         domain: 'mg.example.com',
         secret: 'my-secret',
@@ -24,5 +24,5 @@ test('it is immutable', function () {
     );
 
     // readonly class — properties cannot be modified
-    expect(fn () => $properties->domain = 'changed')->toThrow(\Error::class);
+    expect(fn (): string => $properties->domain = 'changed')->toThrow(\Error::class);
 });

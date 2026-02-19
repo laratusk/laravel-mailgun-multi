@@ -12,11 +12,11 @@ use Illuminate\Support\Facades\Mail;
 use Laratusk\LaravelMailgunMulti\Contracts\MailgunSenderPropertiesResolver;
 use Symfony\Component\Mime\Address;
 
-final class ReconfigureMailgunOnMessageSending
+final readonly class ReconfigureMailgunOnMessageSending
 {
     public function __construct(
-        private readonly MailgunSenderPropertiesResolver $resolver,
-        private readonly string $mailerName = 'mailgun',
+        private MailgunSenderPropertiesResolver $resolver,
+        private string $mailerName = 'mailgun',
     ) {}
 
     public function handle(MessageSending $event): void
@@ -68,7 +68,7 @@ final class ReconfigureMailgunOnMessageSending
     {
         $from = $event->message->getFrom();
 
-        if (empty($from)) {
+        if ($from === []) {
             return null;
         }
 

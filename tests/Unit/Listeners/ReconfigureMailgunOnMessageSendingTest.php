@@ -10,7 +10,7 @@ use Laratusk\LaravelMailgunMulti\DataObjects\MailgunSenderProperties;
 use Laratusk\LaravelMailgunMulti\Listeners\ReconfigureMailgunOnMessageSending;
 use Symfony\Component\Mime\Email;
 
-test('it extracts sender domain and calls resolver', function () {
+test('it extracts sender domain and calls resolver', function (): void {
     $resolver = Mockery::mock(MailgunSenderPropertiesResolver::class);
     $resolver->shouldReceive('resolve')
         ->with('acme.com')
@@ -36,7 +36,7 @@ test('it extracts sender domain and calls resolver', function () {
     $listener->handle($event);
 });
 
-test('it does nothing when from is empty', function () {
+test('it does nothing when from is empty', function (): void {
     $resolver = Mockery::mock(MailgunSenderPropertiesResolver::class);
     $resolver->shouldNotReceive('resolve');
 
@@ -54,7 +54,7 @@ test('it does nothing when from is empty', function () {
     $listener->handle($event);
 });
 
-test('it skips when default mailer is not mailgun', function () {
+test('it skips when default mailer is not mailgun', function (): void {
     Config::set('mail.default', 'smtp');
     Config::set('mail.mailers.smtp', ['transport' => 'smtp']);
     Config::set('mail.mailers.mailgun', ['transport' => 'mailgun']);
@@ -73,12 +73,12 @@ test('it skips when default mailer is not mailgun', function () {
     $resolver->shouldNotHaveReceived('resolve');
 });
 
-test('it logs domain switch when logging is enabled', function () {
+test('it logs domain switch when logging is enabled', function (): void {
     Config::set('services.mailgun.log_domain_switches', true);
 
     Log::shouldReceive('debug')
         ->once()
-        ->with('Mailgun transport reconfigured', Mockery::on(fn (array $context) => $context['sender_domain'] === 'acme.com'
+        ->with('Mailgun transport reconfigured', Mockery::on(fn (array $context): bool => $context['sender_domain'] === 'acme.com'
             && $context['mailgun_domain'] === 'mg.acme.com',
         ));
 
