@@ -1,91 +1,107 @@
-<?php declare(strict_types=1);
+<?php
 
-namespace SkitLabs\LaravelMailGunMultipleDomains\Listeners;
+declare(strict_types=1);
+
+namespace Laratusk\LaravelMailgunMulti\Listeners;
 
 use Illuminate\Mail\Events\MessageSending;
-use Illuminate\Mail\MailManager;
+use Illuminate\Mail\Mailer;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
-use SkitLabs\LaravelMailGunMultipleDomains\Contracts\MailGunSenderPropertiesResolver;
-use Symfony\Component\Mailer\Bridge\Mailgun\Transport\MailgunApiTransport;
+use Laratusk\LaravelMailgunMulti\Contracts\MailgunSenderPropertiesResolver;
 use Symfony\Component\Mime\Address;
 
-class ReconfigureMailGunOnMessageSending
+final class ReconfigureMailgunOnMessageSending
 {
-    private MailGunSenderPropertiesResolver $resolver;
-    private string $mailer;
+    public function __construct(
+        private readonly MailgunSenderPropertiesResolver $resolver,
+        private readonly string $mailerName = 'mailgun',
+    ) {}
 
-    public function __construct(MailGunSenderPropertiesResolver $resolver, string $mailer = 'mailgun')
+    public function handle(MessageSending $event): void
     {
-        $this->resolver = $resolver;
-        $this->mailer = $mailer;
-    }
-
-    /**
-     * Just before sending an email, laravel dispatches the `MessageSending` event.
-     * Use this moment to update the current mail Transport configuration.
-     *
-     * As far as I know, there is no easier way to use multiple Mailgun domains in laravel,
-     * that do not depend on the calling code (Mailables / Controllers) to set this configuration.
-     * Seeing as devs are likely to forget, depending on a system event seems much more friendly.
-     */
-    public function handle(MessageSending $event) : void
-    {
-        if (! $this->isUsingMailgun()) {
+        if (! $this->shouldReconfigure()) {
             return;
         }
 
-        ['domain' => $domain, 'secret' => $secret, 'endpoint' => $endpoint] = $this->resolver->propertiesForDomain(
-            $this->domainNameFrom(... $event->message->getFrom()),
-        );
+        $senderDomain = $this->extractSenderDomain($event);
 
-        $this->configureSender($domain, $secret, $endpoint);
-    }
-
-    /** Test if the configured mailer matches the one this handler is listening for */
-    private function isUsingMailgun() : bool
-    {
-        $mailer = (string) Config::get('mail.default', '');
-
-        return $mailer === $this->mailer;
-    }
-
-    /**
-     * Take an email-address (j.doe@example.net) and return the domain name (example.net).
-     *
-     * @note Only the _first_ sender domain is considered.
-     * @note The domain (example.net) is always returned as lower-case.
-     */
-    private function domainNameFrom(Address ... $addresses) : string
-    {
-        $from = $addresses[0] ?? null;
-        if (! $from instanceof Address) {
-            throw new \RuntimeException('No sender set, impossible to determine sender domain!');
+        if ($senderDomain === null) {
+            return;
         }
 
-        $parts = explode('@', $from->getAddress());
+        $properties = $this->resolver->resolve($senderDomain);
 
-        return mb_strtolower(array_pop($parts));
+        $this->reconfigureTransport($properties->domain, $properties->secret, $properties->endpoint);
+
+        if (Config::get('services.mailgun.log_domain_switches', false)) {
+            Log::debug('Mailgun transport reconfigured', [
+                'sender_domain' => $senderDomain,
+                'mailgun_domain' => $properties->domain,
+                'endpoint' => $properties->endpoint,
+            ]);
+        }
     }
 
     /**
-     * Since the event is dispatched from the Mailer self, we can't just 'forget' the shared
-     * instance, set our configuration, and proceed as normal. This would be possible in the
-     * calling code (App::forgetInstance('mailer') and Mail::clearResolvedInstance('mailer')).
-     * Another option would be to `App::get(MailManager::class)`, purge and re-resolve.
-     *
-     * Through the event, we need to reconfigure the current instance of the mailer. This
-     * makes the assumption that Laravel is using the `symfony/mailgun-mailer` internally.
-     *
-     * Here we swap out the transport for a new `MailgunApiTransport`, created with our
-     * specific sender settings.
-     *
-     * @see MailManager::createMailgunTransport
+     * Checks whether the current default mailer uses the mailgun transport.
      */
-    private function configureSender(string $domain, string $secret, string $endpoint) : void
+    private function shouldReconfigure(): bool
     {
-        Mail::mailer($this->mailer)->setSymfonyTransport(
-            (new MailgunApiTransport($secret, $domain, null))->setHost($endpoint),
-        );
+        $defaultMailer = Config::get('mail.default');
+        $transport = Config::get("mail.mailers.{$defaultMailer}.transport");
+
+        if ($transport !== 'mailgun') {
+            $mailerTransport = Config::get("mail.mailers.{$this->mailerName}.transport");
+
+            return $mailerTransport === 'mailgun';
+        }
+
+        return true;
+    }
+
+    /**
+     * Extracts the sender domain from the outgoing message.
+     */
+    private function extractSenderDomain(MessageSending $event): ?string
+    {
+        $from = $event->message->getFrom();
+
+        if (empty($from)) {
+            return null;
+        }
+
+        /** @var Address $firstSender */
+        $firstSender = reset($from);
+        $email = $firstSender->getAddress();
+
+        $parts = explode('@', $email);
+
+        if (count($parts) !== 2) {
+            return null;
+        }
+
+        return $parts[1];
+    }
+
+    /**
+     * Reconfigures the Mailgun transport with the given domain, secret, and endpoint.
+     */
+    private function reconfigureTransport(string $domain, string $secret, string $endpoint): void
+    {
+        /** @var \Illuminate\Mail\MailManager $mailManager */
+        $mailManager = app('mail.manager');
+
+        $transport = $mailManager->createSymfonyTransport([
+            'transport' => 'mailgun',
+            'secret' => $secret,
+            'domain' => $domain,
+            'endpoint' => $endpoint,
+        ]);
+
+        /** @var Mailer $mailer */
+        $mailer = Mail::mailer($this->mailerName);
+        $mailer->setSymfonyTransport($transport);
     }
 }

@@ -1,146 +1,117 @@
 # Multiple Mailgun Domains in one Laravel app
 
-Sending email through Mailgun is a breeze, when sending from _one domain_ only.   
-For any additional domains, the _calling code_ needs to determine which mailer transport to use.   
-This can be especially annoying when _the mailer to use depends on the sender_, which is often _set inside the mailable_.   
+![PHP Version](https://img.shields.io/badge/php-%5E8.2-blue)
+![Laravel](https://img.shields.io/badge/laravel-10%20%7C%2011%20%7C%2012-red)
+![License](https://img.shields.io/badge/license-MIT-green)
 
-> Using this package, the _calling code_ is no longer concerned with the configured mailers.    
+Send emails from multiple Mailgun domains in a single Laravel application — **automatic transport reconfiguration** based on the sender's domain. No changes required in calling code.
 
 ```php
-<?php declare(strict_types=1);
+// Without this package: calling code must select the right mailer manually
+Mail::mailer('mailgun-acme')->to('j.doe@example.net')->send($mailable);
 
-// app/Mail/ImportantMessage.php
-class ImportantMessage extends \Illuminate\Mail\Mailable
-{
-    public function build() : self
-    {
-        return $this
-            ->subject('Important message')
-            ->from('you@acme.tld') // The sender is often determined _inside_ the mailable
-            ->view('...', []);
-    }
-}
-
-/** @var \App\Mail\ImportantMessage $mailable */
-
-// Without this package, the calling code has to select the right mailer 
-\Illuminate\Support\Facades\Mail::mailer('mailgun-acme.tld')->to('j.doe@example.net')->queue($mailable);
-
-// This package will handle the mailer configuration for you. So the above is as simple as;
-\Illuminate\Support\Facades\Mail::to('j.doe@example.net')->queue($mailable);
+// With this package: just send — transport is reconfigured automatically
+Mail::to('j.doe@example.net')->send($mailable);
 ```
+
+## Requirements
+
+- PHP >= 8.2
+- Laravel 10, 11, or 12
 
 ## Installation
 
-You can install the package via composer:
-
 ```bash
-composer require skitlabs/laravel-mailgun-multiple-domains
+composer require laratusk/laravel-mailgun-multi
 ```
+
+Laravel's auto-discovery will register the service provider automatically.
 
 ## How it works
 
-This package contains a listener that hooks into the `Illuminate\Mail\Events\MessageSending` event, which is dispatched _just before_ sending the e-mail.   
-It then reconfigures the current `Transport`, based on the `from` domain in the message. This works for direct and queued messages alike, with no extra configuration!   
+This package listens to the `Illuminate\Mail\Events\MessageSending` event, which Laravel dispatches just before sending each email. The listener reads the `from` address, extracts the sender domain, and reconfigures the Mailgun transport accordingly.
 
-> Thanks to Laravel's auto-discovery (❤), no assembly required!
-
-
-### Requirements
-There are a few requirements for this to work;
-
-* PHP 8.0, or 8.1
-* Laravel >= 9.0
-* Laravel needs to use `symfony/mailer` internally (default)
-
-#### Older versions
-Not using laravel 9 (yet)? Version 2 of this package supports laravel 7 and 8.
-
-```bash
-composer require skitlabs/laravel-mailgun-multiple-domains=^2.0
-```
+This works seamlessly for both direct and queued messages — no changes to your Mailables or controllers needed.
 
 ## Usage
 
-If you've configured mailgun under `mg.{domain.tld}`, and your secret works for all domains you are sending from; you're ready to start sending e-mail! 👍     
+### Basic setup
 
-Let's say you're sending a message as `sales@acme.app`. Just before sending the message, this package will set the mailgun domain to: `mg.acme.app`.
-   
-### What if I need to customize my settings, per domain?
-Add the sending domains to your mailgun configuration in the key `domains`.
-
-> If a domain is not specified, it defaults to `mg.{domain.tld}`.    
-> If the `secret` or `endpoint` are not configured, these fallback to your configured global defaults.
+Ensure your `config/services.php` has a mailgun entry:
 
 ```php
-<?php declare(strict_types=1);
-
-// config/services.php
-
-return [
-    // ... Other services
-
-    'mailgun' => [
-        'domain' => env('MAILGUN_DOMAIN'),
-        'secret' => env('MAILGUN_SECRET'),
-        'endpoint' => env('MAILGUN_ENDPOINT', 'api.mailgun.net'),
-        'domains' => [
-            'example.net' => [
-                'domain' => 'custom-mg-domain.example.net',
-                'secret' => 'overwrite-the-secret-or-null',
-                'endpoint' => 'overwrite-the-endpoint-or-null',
-            ],
-            'awesome.app' => [
-                'secret' => 'only-change-the-secret-for-this-domain',
-            ],
-        ],
-    ],
-];
+'mailgun' => [
+    'domain'   => env('MAILGUN_DOMAIN'),
+    'secret'   => env('MAILGUN_SECRET'),
+    'endpoint' => env('MAILGUN_ENDPOINT', 'api.mailgun.net'),
+],
 ```
 
-### What if I need to customize how these settings are determined?
-If the standard way of resolving sender properties is not suitable for your use-case, create a custom resolver that implements [MailGunSenderPropertiesResolver](src/Contracts/MailGunSenderPropertiesResolver.php).
-See the [default implementation](src/Resolvers/MailGunSenderPropertiesFromServiceConfigResolver.php) for inspiration.
+If your sender address is `sales@acme.app`, the package will automatically use `mg.acme.app` as the Mailgun domain.
 
-Once you have your own concrete implementation, overwrite the default bind in any of your service providers;
+### Per-domain configuration
+
+Add a `domains` key to override settings for specific sender domains:
 
 ```php
-<?php declare(strict_types=1);
+'mailgun' => [
+    'domain'   => env('MAILGUN_DOMAIN'),
+    'secret'   => env('MAILGUN_SECRET'),
+    'endpoint' => env('MAILGUN_ENDPOINT', 'api.mailgun.net'),
+    'domains'  => [
+        'acme.com' => [
+            'domain'   => 'mg.acme.com',
+            'secret'   => 'acme-mailgun-secret',
+            'endpoint' => 'api.eu.mailgun.net',
+        ],
+        'awesome.app' => [
+            // Only override the secret; domain and endpoint fall back to global defaults
+            'secret' => 'awesome-secret',
+        ],
+    ],
+],
+```
 
-use Illuminate\Support\ServiceProvider;
-use SkitLabs\LaravelMailGunMultipleDomains\Contracts\MailGunSenderPropertiesResolver;
+> If a domain is not listed, the Mailgun domain defaults to `mg.{sender-domain}`.
+> Missing `secret` or `endpoint` values fall back to the global mailgun config.
 
-// app/Providers/AppServiceProvider.php
-class AppServiceProvider extends ServiceProvider
+### Optional: enable domain switch logging
+
+```php
+'mailgun' => [
+    // ...
+    'log_domain_switches' => true, // logs debug info on each transport reconfiguration
+],
+```
+
+### Custom resolver
+
+If the default config-based resolution does not fit your use case, implement the `MailgunSenderPropertiesResolver` contract:
+
+```php
+use Laratusk\LaravelMailgunMulti\Contracts\MailgunSenderPropertiesResolver;
+use Laratusk\LaravelMailgunMulti\DataObjects\MailgunSenderProperties;
+
+class MyCustomResolver implements MailgunSenderPropertiesResolver
 {
-    public function register()
+    public function resolve(string $senderDomain): MailgunSenderProperties
     {
-        // ...
-
-        $this->app->bind(MailGunSenderPropertiesResolver::class, static function () : MailGunSenderPropertiesResolver {
-            return new \Acme\CustomSenderPropertiesResolver();        
-        });
+        // Fetch config from database, cache, or any source
+        return new MailgunSenderProperties(
+            domain: 'mg.' . $senderDomain,
+            secret: 'my-secret',
+            endpoint: 'api.mailgun.net',
+        );
     }
 }
 ```
 
-### What if my mailer has a different name?
-Specify the name of your mailer, as the second argument, when instantiating `ReconfigureMailGunOnMessageSending`.
+Then bind it in a service provider:
 
 ```php
-<?php declare(strict_types=1);
+use Laratusk\LaravelMailgunMulti\Contracts\MailgunSenderPropertiesResolver;
 
-use Illuminate\Support\Facades\Config;
-use SkitLabs\LaravelMailGunMultipleDomains\Contracts\MailGunSenderPropertiesResolver;
-use SkitLabs\LaravelMailGunMultipleDomains\Listeners\ReconfigureMailGunOnMessageSending;
-
-Config::set('mail.default', 'custom-mailer-name');
-Config::set('mail.mailers.custom-mailer-name', [
-    'transport' => 'mailgun',
-]);
-
-/** @var MailGunSenderPropertiesResolver $resolver */
-$handler = new ReconfigureMailGunOnMessageSending($resolver, 'custom-mailer-name'); 
+$this->app->bind(MailgunSenderPropertiesResolver::class, MyCustomResolver::class);
 ```
 
 ## Testing
@@ -149,9 +120,19 @@ $handler = new ReconfigureMailGunOnMessageSending($resolver, 'custom-mailer-name
 composer test
 ```
 
-## Changelog
+Run all quality checks (format + static analysis + tests):
 
-Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed recently.
+```bash
+composer quality
+```
+
+## Credits
+
+This package is a maintained fork of [skitlabs/laravel-mailgun-multiple-domains](https://github.com/skitlabs/laravel-mailgun-multiple-domains) by [Jurre Vriezinga](https://github.com/skitlabs), which is no longer actively maintained.
+
+## Contributing
+
+Contributions are welcome. Please open an issue or pull request on [GitHub](https://github.com/laratusk/laravel-mailgun-multi).
 
 ## License
 

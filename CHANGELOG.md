@@ -1,29 +1,54 @@
-Changelog
+# Changelog
 
-All notable changes will be documented in this file.   
+All notable changes will be documented in this file.
 
-3.0.0 - 2022-03-15
+## [4.0.0] - 2026-02-19
 
-    Support for laravel 9 🎉
+### Changed
+- Namespace changed from `SkitLabs\LaravelMailGunMultipleDomains` to `Laratusk\LaravelMailgunMulti`
+- Minimum PHP version bumped to 8.2
+- Minimum Laravel version bumped to 10.0
+- DTO `MailgunSenderProperties` is now a `readonly class`
+- Resolver renamed to `ConfigBasedMailgunSenderPropertiesResolver`
+- ServiceProvider renamed to `MailgunMultiServiceProvider`
+- All classes are now `final`
 
-2.0.1 - 2021-04-30
+### Added
+- Custom exceptions: `InvalidMailgunConfigException`, `MailgunTransportException`
+- Config validation for secret and endpoint
+- Optional logging for domain switches (`services.mailgun.log_domain_switches`)
+- `MailgunConfigKey` enum
+- PHPStan level 8 static analysis
+- Laravel Pint code style enforcement
+- Rector automated refactoring
+- Pest test suite with full coverage
+- GitHub Actions CI/CD pipeline
 
-    Bumps [laravel/framework](https://github.com/laravel/framework) from 8.29.0 to 8.40.0.
-    (see https://github.com/advisories/GHSA-4mg9-vhxq-vm7, though not affected)
+### Removed
+- Support for PHP 8.0 and 8.1
+- Support for Laravel 9
+- Psalm configuration (replaced by PHPStan/Larastan)
+- `composer.lock` from repository
 
-2.0.0 - 2021-04-08
+## [3.0.0] - 2022-03-15
 
-    BREAKING CHANGE: Drop support for laravel/framework < 7.0
-    Allow use of custom resolvers through MailGunSenderPropertiesResolver
-    Allow use of custom mailer names (still defaults to "mailgun")
+- Support for Laravel 9
 
+## [2.0.1] - 2021-04-30
 
-1.0.1 - 2021-03-02
+- Bumps laravel/framework from 8.29.0 to 8.40.0
 
-    Fix incomplete README.md   
-    Fix initial release date mentioned in the changelog
+## [2.0.0] - 2021-04-08
 
-    
-1.0.0 - 2021-03-02
+- BREAKING CHANGE: Drop support for laravel/framework < 7.0
+- Allow use of custom resolvers through MailGunSenderPropertiesResolver
+- Allow use of custom mailer names (still defaults to "mailgun")
 
-    🎉 initial release 🎉
+## [1.0.1] - 2021-03-02
+
+- Fix incomplete README.md
+- Fix initial release date mentioned in the changelog
+
+## [1.0.0] - 2021-03-02
+
+- Initial release

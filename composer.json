@@ -1,51 +1,67 @@
 {
-    "name": "skitlabs/laravel-mailgun-multiple-domains",
-    "description": "Multiple sender domains, without modifying calling code",
-    "type": "library",
+    "name": "laratusk/laravel-mailgun-multi",
+    "description": "Send emails from multiple Mailgun domains in one Laravel app — automatic transport reconfiguration based on sender domain.",
+    "keywords": ["laravel", "mailgun", "multiple-domains", "mail", "email"],
+    "homepage": "https://github.com/laratusk/laravel-mailgun-multi",
     "license": "MIT",
     "authors": [
         {
-            "name": "Jurre Vriezinga",
-            "email": "j.vriezinga@gmail.com"
+            "name": "Laratusk",
+            "homepage": "https://github.com/laratusk"
         }
     ],
+    "require": {
+        "php": "^8.2",
+        "illuminate/contracts": "^10.0|^11.0|^12.0",
+        "illuminate/mail": "^10.0|^11.0|^12.0",
+        "illuminate/support": "^10.0|^11.0|^12.0"
+    },
+    "require-dev": {
+        "laravel/pint": "^1.0",
+        "nunomaduro/larastan": "^2.0|^3.0",
+        "orchestra/testbench": "^8.0|^9.0|^10.0",
+        "pestphp/pest": "^2.0|^3.0",
+        "pestphp/pest-plugin-laravel": "^2.0|^3.0",
+        "rector/rector": "^1.0|^2.0",
+        "symfony/http-client": "^6.0|^7.0",
+        "symfony/mailgun-mailer": "^6.0|^7.0"
+    },
     "autoload": {
         "psr-4": {
-            "SkitLabs\\LaravelMailGunMultipleDomains\\": "src/"
+            "Laratusk\\LaravelMailgunMulti\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "SkitLabs\\LaravelMailGunMultipleDomains\\Tests\\": "tests/"
+            "Laratusk\\LaravelMailgunMulti\\Tests\\": "tests/"
         }
+    },
+    "scripts": {
+        "test": "vendor/bin/pest",
+        "test:coverage": "vendor/bin/pest --coverage",
+        "analyse": "vendor/bin/phpstan analyse",
+        "format": "vendor/bin/pint",
+        "refactor": "vendor/bin/rector",
+        "refactor:dry": "vendor/bin/rector --dry-run",
+        "quality": [
+            "@format",
+            "@analyse",
+            "@test"
+        ]
     },
     "extra": {
         "laravel": {
             "providers": [
-                "SkitLabs\\LaravelMailGunMultipleDomains\\Providers\\EventServiceProvider"
+                "Laratusk\\LaravelMailgunMulti\\Providers\\MailgunMultiServiceProvider"
             ]
         }
     },
-    "require": {
-        "php": "^8.0|^8.1"
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
     },
-    "require-dev": {
-        "phpunit/phpunit": "^9.5",
-        "phpstan/phpstan": "^1.4",
-        "vimeo/psalm": "^4.6",
-        "orchestra/testbench": "^7.0",
-        "illuminate/contracts": "^9.0",
-        "symfony/var-dumper": "^6.0",
-        "symfony/mailgun-mailer": "^6.0",
-        "symfony/http-client": "^6.0"
-    },
-    "conflict": {
-        "laravel/framework": "^8.0"
-    },
-    "scripts": {
-        "analyse": ["@phpstan", "@psalm"],
-        "phpstan": "phpstan analyse src tests --level 8",
-        "psalm": "psalm --show-info=true",
-        "test": "phpunit -c phpunit.xml --testdox"
-    }
+    "minimum-stability": "dev",
+    "prefer-stable": true
 }
