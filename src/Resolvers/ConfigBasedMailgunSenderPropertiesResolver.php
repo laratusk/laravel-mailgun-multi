@@ -52,7 +52,7 @@ final class ConfigBasedMailgunSenderPropertiesResolver implements MailgunSenderP
      */
     private function buildDefaultDomain(string $senderDomain): string
     {
-        return 'mg.' . $senderDomain;
+        return 'mg.'.$senderDomain;
     }
 
     /**

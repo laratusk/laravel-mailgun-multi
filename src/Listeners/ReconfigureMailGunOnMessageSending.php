@@ -21,7 +21,7 @@ final class ReconfigureMailgunOnMessageSending
 
     public function handle(MessageSending $event): void
     {
-        if (! $this->shouldReconfigure()) {
+        if (!$this->shouldReconfigure()) {
             return;
         }
 

@@ -13,7 +13,8 @@ test('it binds the default resolver', function () {
 });
 
 test('it allows overriding the resolver binding', function () {
-    $custom = new class implements MailgunSenderPropertiesResolver {
+    $custom = new class implements MailgunSenderPropertiesResolver
+    {
         public function resolve(string $senderDomain): MailgunSenderProperties
         {
             return new MailgunSenderProperties(

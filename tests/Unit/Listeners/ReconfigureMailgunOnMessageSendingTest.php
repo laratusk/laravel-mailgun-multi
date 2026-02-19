@@ -23,7 +23,7 @@ test('it extracts sender domain and calls resolver', function () {
 
     $listener = new ReconfigureMailgunOnMessageSending($resolver);
 
-    $email = new Email();
+    $email = new Email;
     $email->from('user@acme.com');
     $email->to('recipient@example.com');
     $email->subject('Test');
@@ -42,7 +42,7 @@ test('it does nothing when from is empty', function () {
 
     $listener = new ReconfigureMailgunOnMessageSending($resolver);
 
-    $email = new Email();
+    $email = new Email;
     $email->to('recipient@example.com');
     $email->subject('Test');
 
@@ -63,7 +63,7 @@ test('it skips when default mailer is not mailgun', function () {
 
     $listener = new ReconfigureMailgunOnMessageSending($resolver, 'smtp');
 
-    $email = new Email();
+    $email = new Email;
     $email->from('user@acme.com');
 
     $event = new MessageSending(message: $email, data: []);
@@ -79,7 +79,7 @@ test('it logs domain switch when logging is enabled', function () {
     Log::shouldReceive('debug')
         ->once()
         ->with('Mailgun transport reconfigured', Mockery::on(fn (array $context) => $context['sender_domain'] === 'acme.com'
-            && $context['mailgun_domain'] === 'mg.acme.com'
+            && $context['mailgun_domain'] === 'mg.acme.com',
         ));
 
     $resolver = Mockery::mock(MailgunSenderPropertiesResolver::class);
@@ -92,7 +92,7 @@ test('it logs domain switch when logging is enabled', function () {
 
     $listener = new ReconfigureMailgunOnMessageSending($resolver);
 
-    $email = new Email();
+    $email = new Email;
     $email->from('user@acme.com');
 
     $event = new MessageSending(message: $email, data: []);

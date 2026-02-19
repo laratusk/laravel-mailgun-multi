@@ -25,7 +25,7 @@ beforeEach(function () {
 });
 
 test('it resolves fully configured domain', function () {
-    $resolver = new ConfigBasedMailgunSenderPropertiesResolver();
+    $resolver = new ConfigBasedMailgunSenderPropertiesResolver;
     $properties = $resolver->resolve('custom.com');
 
     expect($properties->domain)->toBe('mg.custom.com')
@@ -34,7 +34,7 @@ test('it resolves fully configured domain', function () {
 });
 
 test('it falls back to global config for partial domain config', function () {
-    $resolver = new ConfigBasedMailgunSenderPropertiesResolver();
+    $resolver = new ConfigBasedMailgunSenderPropertiesResolver;
     $properties = $resolver->resolve('partial.com');
 
     expect($properties->domain)->toBe('mg.partial.com')
@@ -43,7 +43,7 @@ test('it falls back to global config for partial domain config', function () {
 });
 
 test('it builds default domain for unconfigured domains', function () {
-    $resolver = new ConfigBasedMailgunSenderPropertiesResolver();
+    $resolver = new ConfigBasedMailgunSenderPropertiesResolver;
     $properties = $resolver->resolve('unknown.com');
 
     expect($properties->domain)->toBe('mg.unknown.com')
@@ -54,19 +54,19 @@ test('it builds default domain for unconfigured domains', function () {
 test('it throws exception when secret is missing', function () {
     Config::set('services.mailgun.secret', null);
 
-    $resolver = new ConfigBasedMailgunSenderPropertiesResolver();
+    $resolver = new ConfigBasedMailgunSenderPropertiesResolver;
     $resolver->resolve('unknown.com');
 })->throws(InvalidMailgunConfigException::class, 'secret is not configured');
 
 test('it throws exception when secret is empty string', function () {
     Config::set('services.mailgun.secret', '');
 
-    $resolver = new ConfigBasedMailgunSenderPropertiesResolver();
+    $resolver = new ConfigBasedMailgunSenderPropertiesResolver;
     $resolver->resolve('unknown.com');
 })->throws(InvalidMailgunConfigException::class, 'secret is not configured');
 
 test('it uses domain-specific secret over global secret', function () {
-    $resolver = new ConfigBasedMailgunSenderPropertiesResolver();
+    $resolver = new ConfigBasedMailgunSenderPropertiesResolver;
     $properties = $resolver->resolve('custom.com');
 
     expect($properties->secret)->toBe('custom-secret');
