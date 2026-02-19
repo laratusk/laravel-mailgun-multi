@@ -9,6 +9,4 @@ parameters:
 
     ignoreErrors: []
 
-    checkMissingIterableValueType: true
-    checkGenericClassInNonGenericObjectType: false
     reportUnmatchedIgnoredErrors: true
