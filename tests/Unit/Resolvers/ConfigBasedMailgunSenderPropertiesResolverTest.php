@@ -65,6 +65,20 @@ test('it throws exception when secret is empty string', function (): void {
     $resolver->resolve('unknown.com');
 })->throws(InvalidMailgunConfigException::class, 'secret is not configured');
 
+test('it throws exception when endpoint is missing', function (): void {
+    Config::set('services.mailgun.endpoint');
+
+    $resolver = new ConfigBasedMailgunSenderPropertiesResolver;
+    $resolver->resolve('unknown.com');
+})->throws(InvalidMailgunConfigException::class, 'endpoint is not configured');
+
+test('it throws exception when endpoint is empty string', function (): void {
+    Config::set('services.mailgun.endpoint', '');
+
+    $resolver = new ConfigBasedMailgunSenderPropertiesResolver;
+    $resolver->resolve('unknown.com');
+})->throws(InvalidMailgunConfigException::class, 'endpoint is not configured');
+
 test('it uses domain-specific secret over global secret', function (): void {
     $resolver = new ConfigBasedMailgunSenderPropertiesResolver;
     $properties = $resolver->resolve('custom.com');

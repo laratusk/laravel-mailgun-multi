@@ -2,6 +2,18 @@
 
 All notable changes will be documented in this file.
 
+## [4.0.1] - 2026-02-20
+
+### Fixed
+- CI: PHPStan memory limit increased to 512M to avoid worker crashes
+
+### Changed
+- Removed unused `MailgunConfigKey` enum and `MailgunTransportException` class
+- Removed obsolete `psalm.xml` reference from `.gitattributes`
+
+### Added
+- Tests for missing and empty endpoint in config resolver
+
 ## [4.0.0] - 2026-02-19
 
 ### Changed
