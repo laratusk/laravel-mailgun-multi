@@ -24,5 +24,5 @@ test('it is immutable', function (): void {
     );
 
     // readonly class — properties cannot be modified
-    expect(fn (): string => $properties->domain = 'changed')->toThrow(\Error::class);
+    expect(fn (): string => $properties->domain = 'changed')->toThrow(Error::class);
 });

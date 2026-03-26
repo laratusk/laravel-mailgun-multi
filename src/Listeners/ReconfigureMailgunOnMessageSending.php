@@ -6,6 +6,7 @@ namespace Laratusk\LaravelMailgunMulti\Listeners;
 
 use Illuminate\Mail\Events\MessageSending;
 use Illuminate\Mail\Mailer;
+use Illuminate\Mail\MailManager;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -90,7 +91,7 @@ final readonly class ReconfigureMailgunOnMessageSending
      */
     private function reconfigureTransport(string $domain, string $secret, string $endpoint): void
     {
-        /** @var \Illuminate\Mail\MailManager $mailManager */
+        /** @var MailManager $mailManager */
         $mailManager = app('mail.manager');
 
         $transport = $mailManager->createSymfonyTransport([
