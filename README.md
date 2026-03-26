@@ -1,7 +1,7 @@
 # Multiple Mailgun Domains in one Laravel app
 
 ![PHP Version](https://img.shields.io/badge/php-%5E8.2-blue)
-![Laravel](https://img.shields.io/badge/laravel-10%20%7C%2011%20%7C%2012-red)
+![Laravel](https://img.shields.io/badge/laravel-10%20%7C%2011%20%7C%2012%20%7C%2013-red)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 Send emails from multiple Mailgun domains in a single Laravel application — **automatic transport reconfiguration** based on the sender's domain. No changes required in calling code.
@@ -17,7 +17,7 @@ Mail::to('j.doe@example.net')->send($mailable);
 ## Requirements
 
 - PHP >= 8.2
-- Laravel 10, 11, or 12
+- Laravel 10, 11, 12, or 13
 
 ## Installation
 
