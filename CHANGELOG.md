@@ -2,6 +2,31 @@
 
 All notable changes will be documented in this file.
 
+## [4.3.0] - 2026-08-05
+
+### Changed
+- Replaced the abandoned `nunomaduro/larastan` dev dependency with the maintained `larastan/larastan` (`^2.0|^3.0`)
+- PHPStan include path updated to `vendor/larastan/larastan/extension.neon`
+- `symfony/http-client` and `symfony/mailgun-mailer` dev constraints widened to `^6.0|^7.0|^8.0` to test against the Symfony 8 Mailgun bridge used by Laravel 13 on PHP 8.4
+
+## [4.2.0] - 2026-03-26
+
+### Changed
+- `pestphp/pest` and `pestphp/pest-plugin-laravel` dev constraints widened to `^4.0` for Laravel 13 compatibility
+- README requirements and Laravel badge updated to include Laravel 13
+
+### Fixed
+- Code style: import `MailManager` and `Error` instead of using fully qualified names (Pint `fully_qualified_strict_types`)
+
+## [4.1.0] - 2026-03-16
+
+### Added
+- Support for Laravel 13: `illuminate/contracts`, `illuminate/mail` and `illuminate/support` now allow `^13.0`
+- CI matrix extended with Laravel 13, excluding PHP 8.2 which Laravel 13 does not support
+
+### Changed
+- `orchestra/testbench` dev constraint widened to `^11.0`
+
 ## [4.0.1] - 2026-02-20
 
 ### Fixed
